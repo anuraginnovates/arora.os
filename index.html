@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Custom OS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* OS Styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: url('1600w-5ixgVU5XGxc.webp') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            user-select: none; /* Prevent text selection */
+        }
+
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 60px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+            z-index: 10; /* Ensure taskbar is above other elements */
+        }
+
+        /* Red and Blue Circles */
+        .circle {
+            width: 20px; /* Increased size */
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .red-circle {
+            background-color: red;
+            cursor: pointer;
+        }
+
+        .blue-circle {
+            background-color: blue;
+            cursor: pointer;
+        }
+
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            margin: 0 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .icon-circle:hover {
+            transform: scale(1.2);
+        }
+
+        .glow {
+            box-shadow: 0 0 15px blue, 0 0 25px blue, 0 0 40px blue, 0 0 60px blue;
+            animation: glowPulse 1s infinite;
+        }
+
+        @keyframes glowPulse {
+            0% {
+                box-shadow: 0 0 10px blue, 0 0 20px blue, 0 0 30px blue, 0 0 40px blue;
+            }
+            50% {
+                box-shadow: 0 0 20px blue, 0 0 30px blue, 0 0 50px blue, 0 0 70px blue;
+            }
+            100% {
+                box-shadow: 0 0 10px blue, 0 0 20px blue, 0 0 30px blue, 0 0 40px blue;
+            }
+        }
+
+        .microphone-icon {
+            font-size: 28px;
+        }
+
+        .time-date-container {
+            position: absolute;
+            top: 10px;
+            right: 30px;
+            text-align: right;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            z-index: 5; /* Ensure it doesn't overlap with calculator */
+        }
+
+        .time {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .date {
+            font-size: 24px;
+        }
+
+        .desktop-icon {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+            z-index: 5; /* Ensure it doesn't overlap with calculator */
+        }
+
+        .desktop-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .desktop-icon span {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        /* Calculator Modal */
+        .calculator-modal {
+            display: none;
+            position: fixed; /* Changed from absolute to fixed */
+            background-color: #333;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            width: 260px;
+            /* Initial position */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100; /* Ensure calculator is above other elements */
+            user-select: none; /* Prevent text selection */
+        }
+
+        .calculator-modal.moving {
+            cursor: move;
+        }
+
+        .calculator {
+            position: relative;
+        }
+
+        .window-controls {
+            display: flex;
+            align-items: center;
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            z-index: 2;
+        }
+
+        .display-container {
+            background-color: #111;
+            color: #0ff;
+            text-align: right;
+            box-sizing: border-box;
+            border-bottom: 2px solid #0ff;
+            position: relative;
+            padding-top: 25px;
+            z-index: 1;
+            cursor: move; /* Indicate that this area can be dragged */
+        }
+
+        .history-display {
+            font-size: 0.7em;
+            padding: 5px 10px;
+            opacity: 0.7;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .current-display {
+            font-size: 1.5em;
+            padding: 10px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .button {
+            background-color: #222;
+            border: 1px solid #333;
+            color: #fff;
+            font-size: 1.2em;
+            padding: 15px;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px #000, 0 0 10px #0ff;
+            user-select: none; /* Prevent text selection */
+        }
+
+        .button:active {
+            background-color: #444;
+            box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+
+        .operator {
+            background-color: #333;
+            color: #fff;
+            box-shadow: inset 0 0 10px #000, 0 0 10px #0ff;
+        }
+
+        .operator:active {
+            background-color: #444;
+            box-shadow: inset 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+
+        .submenu {
+            position: absolute;
+            display: none;
+            flex-direction: column;
+            background-color: #333;
+            border: 1px solid #444;
+            box-shadow: 0 0 10px #0ff;
+            z-index: 10;
+        }
+
+        .submenu .button {
+            padding: 10px 30px;
+            margin: 0;
+            border: none;
+            border-bottom: 1px solid #444;
+            box-shadow: none;
+        }
+
+        .submenu .button:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="taskbar">
+        <div class="icon-circle microphone-icon" id="microphone-icon">
+            <i class="fa-solid fa-microphone"></i>
+        </div>
+    </div>
+
+    <div class="time-date-container">
+        <div id="time" class="time">11:34 AM</div>
+        <div id="date" class="date">Wednesday, September 4</div>
+    </div>
+
+    <!-- Desktop Icons -->
+    <div class="desktop-icon" style="top: 20%; left: 10%;" onclick="openCalculator()">
+        <img src="calculator-icon.png" alt="Calculator Icon">
+        <span>Calculator</span>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculator-modal" class="calculator-modal">
+        <div class="calculator">
+            <!-- Window Controls -->
+            <div class="window-controls">
+                <div class="circle red-circle" onclick="closeApp()"></div>
+                <div class="circle blue-circle" onclick="toggleLock()"></div>
+            </div>
+            <div class="display-container" id="drag-area">
+                <div class="history-display" id="historyDisplay"></div>
+                <div class="current-display" id="display">0</div>
+            </div>
+            <div class="buttons">
+                <button class="button" onclick="clearDisplay()">C</button>
+                <button class="button" onclick="deleteDigit()">DEL</button>
+                <button class="button" onclick="toggleSubmenu()">⇄</button>
+                <div class="submenu" id="submenu">
+                    <button class="button" onclick="squareNumber()">x²</button>
+                    <button class="button" onclick="cubeNumber()">x³</button>
+                    <button class="button" onclick="appendSymbol('%')">%</button>
+                    <button class="button" onclick="sqrtNumber()">√x</button>
+                    <button class="button" onclick="absNumber()">|x|</button>
+                </div>
+                <button class="button operator" onclick="appendSymbol('/')">÷</button>
+
+                <button class="button" onclick="appendNumber('7')">7</button>
+                <button class="button" onclick="appendNumber('8')">8</button>
+                <button class="button" onclick="appendNumber('9')">9</button>
+                <button class="button operator" onclick="appendSymbol('*')">×</button>
+
+                <button class="button" onclick="appendNumber('4')">4</button>
+                <button class="button" onclick="appendNumber('5')">5</button>
+                <button class="button" onclick="appendNumber('6')">6</button>
+                <button class="button operator" onclick="appendSymbol('-')">-</button>
+
+                <button class="button" onclick="appendNumber('1')">1</button>
+                <button class="button" onclick="appendNumber('2')">2</button>
+                <button class="button" onclick="appendNumber('3')">3</button>
+                <button class="button operator" onclick="appendSymbol('+')">+</button>
+
+                <button class="button zero" onclick="appendNumber('0')">0</button>
+                <button class="button" onclick="appendSymbol('.')">.</button>
+                <button class="button operator" onclick="calculateResult()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLocked = true; // Initially locked
+
+        function updateTimeAndDate() {
+            const now = new Date();
+            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+            document.getElementById('time').textContent = time;
+            document.getElementById('date').textContent = date;
+        }
+
+        setInterval(updateTimeAndDate, 1000);
+        updateTimeAndDate();
+
+        // Open Calculator Function
+        function openCalculator() {
+            const modal = document.getElementById('calculator-modal');
+            modal.style.display = 'block';
+            // Center the calculator
+            modal.style.top = '50%';
+            modal.style.left = '50%';
+            modal.style.transform = 'translate(-50%, -50%)';
+        }
+
+        // Close the app (red circle)
+        function closeApp() {
+            const modal = document.getElementById('calculator-modal');
+            modal.style.display = 'none';
+        }
+
+        // Toggle Lock/Unlock Functionality (blue circle)
+        function toggleLock() {
+            isLocked = !isLocked;
+            // Change cursor to indicate draggable state
+            const dragArea = document.getElementById('drag-area');
+            if (isLocked) {
+                dragArea.style.cursor = 'default';
+            } else {
+                dragArea.style.cursor = 'move';
+            }
+        }
+
+        // Make Calculator Draggable
+        const calculatorModal = document.getElementById('calculator-modal');
+
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+
+        // Add mousedown event to the calculator header (window-controls) and display area
+        const dragAreas = [document.querySelector('.window-controls'), document.getElementById('drag-area')];
+
+        dragAreas.forEach(area => {
+            area.addEventListener('mousedown', function(e) {
+                if (isLocked) return; // Only draggable when unlocked
+                isDragging = true;
+                offsetX = e.clientX - calculatorModal.offsetLeft;
+                offsetY = e.clientY - calculatorModal.offsetTop;
+                calculatorModal.classList.add('moving');
+                e.preventDefault(); // Prevent text selection
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                calculatorModal.style.left = (e.clientX - offsetX) + 'px';
+                calculatorModal.style.top = (e.clientY - offsetY) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                isDragging = false;
+                calculatorModal.classList.remove('moving');
+            }
+        });
+
+        // Calculator Functions
+        const display = document.getElementById('display');
+        const historyDisplay = document.getElementById('historyDisplay');
+        let currentInput = '';
+        let operator = '';
+        let previousInput = '';
+        let history = '';
+
+        function appendNumber(number) {
+            if (currentInput === '0' && number !== '.') {
+                currentInput = number;
+            } else {
+                currentInput += number;
+            }
+            updateDisplay();
+        }
+
+        function appendSymbol(symbol) {
+            if (symbol === '.') {
+                if (!currentInput.includes('.')) {
+                    currentInput += '.';
+                }
+                updateDisplay();
+                return;
+            }
+            if (currentInput === '') return;
+            if (previousInput !== '') {
+                calculateResult();
+            }
+            operator = symbol;
+            previousInput = currentInput;
+            currentInput = '';
+            updateDisplay();
+        }
+
+        function calculateResult() {
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    result = prev / current;
+                    break;
+                case '%':
+                    result = prev % current;
+                    break;
+                default:
+                    return;
+            }
+
+            history += `${previousInput} ${operator} ${currentInput} = ${result}\n`;
+            currentInput = result.toString();
+            operator = '';
+            previousInput = '';
+            updateDisplay();
+        }
+
+        function squareNumber() {
+            if (currentInput === '') return;
+            const result = (parseFloat(currentInput) ** 2).toString();
+            history += `${currentInput}² = ${result}\n`;
+            currentInput = result;
+            updateDisplay();
+        }
+
+        function cubeNumber() {
+            if (currentInput === '') return;
+            const result = (parseFloat(currentInput) ** 3).toString();
+            history += `${currentInput}³ = ${result}\n`;
+            currentInput = result;
+            updateDisplay();
+        }
+
+        function sqrtNumber() {
+            if (currentInput === '') return;
+            const result = (Math.sqrt(parseFloat(currentInput))).toString();
+            history += `√${currentInput} = ${result}\n`;
+            currentInput = result;
+            updateDisplay();
+        }
+
+        function absNumber() {
+            if (currentInput === '') return;
+            const result = (Math.abs(parseFloat(currentInput))).toString();
+            history += `|${currentInput}| = ${result}\n`;
+            currentInput = result;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            operator = '';
+            previousInput = '';
+            history = '';
+            updateDisplay();
+        }
+
+        function deleteDigit() {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === '') currentInput = '0';
+            updateDisplay();
+        }
+
+        function toggleSubmenu() {
+            const submenu = document.getElementById('submenu');
+            submenu.style.display = submenu.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function updateDisplay() {
+            display.textContent = currentInput || '0';
+            historyDisplay.textContent = history;
+        }
+
+        // Voice Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            console.log('Voice recognition activated.');
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript.toLowerCase();
+            console.log('You said:', transcript);
+
+            if (transcript.includes('hello') || transcript.includes('hi')) {
+                speak('Hello, how can I assist you?', 0.8, 1.2);
+            } else if (transcript.includes('good morning')) {
+                speak('Good morning! Hope you have a great day.', 0.8, 1.2);
+            } else if (transcript.includes('good night')) {
+                speak('Good night! Sweet dreams.', 0.8, 1.2);
+            } else if (transcript.includes('open calculator')) {
+                speak('Opening calculator.', 0.8, 1.2);
+                openCalculator();
+            }
+        };
+
+        document.getElementById('microphone-icon').addEventListener('click', function() {
+            this.classList.toggle('glow');
+            recognition.start();
+        });
+
+        // Speak function with manly voice settings
+        function speak(text, pitch, rate) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.pitch = pitch; // Lower pitch for a deeper voice
+            utterance.rate = rate;   // Slow down the speech rate
+            const voices = speechSynthesis.getVoices();
+            utterance.voice = voices.find(voice => voice.name.includes('Google UK English Male')) || voices[0];
+            speechSynthesis.speak(utterance);
+        }
+    </script>
+</body>
+</html>
